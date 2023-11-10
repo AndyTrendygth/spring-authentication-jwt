@@ -6,6 +6,7 @@ import at.krenn.springauthenticationjwt.service.Requests.RegisterRequest;
 import at.krenn.springauthenticationjwt.service.Responses.LoginResponse;
 import at.krenn.springauthenticationjwt.service.Responses.RegisterResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -14,11 +15,13 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@CommonsLog
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
     @PostMapping("/login")
     public HttpEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest){
+        log.info("Incoming Login request");
         return ResponseEntity.ok(authenticationService.login(loginRequest));
     }
 

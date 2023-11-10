@@ -9,6 +9,7 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +20,7 @@ import java.util.function.Function;
 
 @Component
 @RequiredArgsConstructor
+@CommonsLog
 public class JWTFactory {
 
     private final String TOKEN_HEADER = "Authorization";
@@ -32,6 +34,7 @@ public class JWTFactory {
      * @return a signed JWT token
      */
     public String generateToken(User user){
+        log.info("Generating JWT token");
         return Jwts.builder().setSubject(user.getEmail())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis()+ 60000*60*24))

@@ -27,7 +27,7 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter {
     private final UserService userService;
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        try {
+        /*try {
             String jwtToken = jwtFactory.resolveToken(request);
             if (jwtToken==null){
                 return;
@@ -44,5 +44,28 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter {
 
         }
         filterChain.doFilter(request,response);
+
+    */
+
+        try {
+            String jwtToken = jwtFactory.resolveToken(request);
+            if (jwtToken != null) {
+                String email = jwtFactory.extractEmail(jwtToken);
+                if (!email.isEmpty() && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UserDetails user = customUserDetailsService.loadUserByUsername(email);
+                    if (jwtFactory.isTokenValid(jwtToken, user)) {
+                        Authentication authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error processing JWT token", e);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+            return;
+        }
+        filterChain.doFilter(request, response);
+
     }
+
 }

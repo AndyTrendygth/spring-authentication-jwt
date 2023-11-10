@@ -10,8 +10,8 @@ public class RoleConverter implements AttributeConverter<Role, String> {
     public String convertToDatabaseColumn(Role role) {
          if(role==null) return null;
          return switch (role){
-             case USER -> "ROLE_USER";
-             case ADMIN -> "ROLE_ADMIN";
+             case USER -> "USER";
+             case ADMIN -> "ADMIN";
          };
     }
 
