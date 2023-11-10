@@ -10,8 +10,8 @@ public class RoleConverter implements AttributeConverter<Role, String> {
     public String convertToDatabaseColumn(Role role) {
          if(role==null) return null;
          return switch (role){
-             case ROLE_USER -> "ROLE_USER";
-             case ROLE_ADMIN -> "ROLE_ADMIN";
+             case USER -> "ROLE_USER";
+             case ADMIN -> "ROLE_ADMIN";
          };
     }
 
@@ -19,8 +19,8 @@ public class RoleConverter implements AttributeConverter<Role, String> {
     public Role convertToEntityAttribute(String dbValue) {
         if (dbValue==null) return null;
         return switch (dbValue){
-            case "ROLE_USER" -> Role.ROLE_USER;
-            case "ROLE_ADMIN" -> Role.ROLE_ADMIN;
+            case "USER" -> Role.USER;
+            case "ADMIN" -> Role.ADMIN;
             default -> throw new IllegalArgumentException(dbValue + " is unknown for User Role");
         };
     }

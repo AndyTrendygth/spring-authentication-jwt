@@ -9,14 +9,12 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.annotations.Comment;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
 import java.util.Map;
-import java.util.SimpleTimeZone;
 import java.util.function.Function;
 
 @Component
@@ -36,7 +34,7 @@ public class JWTFactory {
     public String generateToken(User user){
         return Jwts.builder().setSubject(user.getEmail())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis()+ 1000*60*24))
+                .setExpiration(new Date(System.currentTimeMillis()+ 60000*60*24))
                 .claim("role", user.getRole())
                 .signWith(getSignatureKey(), SignatureAlgorithm.HS256)
                 .compact();
@@ -110,11 +108,16 @@ public class JWTFactory {
         return extractClaim(token, Claims::getExpiration).before(new Date());
     }
 
-    public String validateToken(){
-        return null;
-    }
+    //TODO
+    public String generateRefreshToken(User user, Map<String, Object> claims){
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(user.getEmail())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis()+ 604800000))
+                .claim("role", user.getRole())
+                .signWith(getSignatureKey(), SignatureAlgorithm.HS256)
+                .compact();
 
-    public String refreshToken(){
-        return null;
     }
 }

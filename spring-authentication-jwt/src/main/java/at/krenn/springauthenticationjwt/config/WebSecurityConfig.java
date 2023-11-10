@@ -31,17 +31,20 @@ public class WebSecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
     private final AuthenticationConfiguration authenticationConfiguration;
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, HandlerMappingIntrospector introspector) throws Exception {
+        //MvcRequestMatcher.Builder mvcRequestMatcher = new MvcRequestMatcher.Builder(introspector);
        http.csrf(AbstractHttpConfigurer::disable)
                .authorizeHttpRequests(request ->
                        request.requestMatchers("/api/auth/**").permitAll()
                                .requestMatchers(PathRequest.toH2Console()).permitAll()
-                               .requestMatchers("/api/users/**").hasRole(Role.ROLE_ADMIN.name())
+                               .requestMatchers("/api/users/**").hasAnyAuthority(Role.ADMIN.name())
                                .anyRequest().authenticated())
+               .headers(headers -> headers.frameOptions((frameOptions) -> frameOptions.disable()))
                .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                .authenticationProvider(authenticationProvider())
                .addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
+
+
 
        return http.build();
     }

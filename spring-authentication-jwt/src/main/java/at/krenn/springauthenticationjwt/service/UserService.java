@@ -3,6 +3,7 @@ package at.krenn.springauthenticationjwt.service;
 import at.krenn.springauthenticationjwt.domain.User;
 import at.krenn.springauthenticationjwt.persistence.UserRepository;
 import at.krenn.springauthenticationjwt.service.Requests.CreateUserRequest;
+import at.krenn.springauthenticationjwt.service.Requests.RegisterRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -35,5 +36,17 @@ public class UserService {
                                 .role(createUserRequest.role())
                         .build())
                 );
+    }
+
+    public User createUser(RegisterRequest registerRequest){
+        return userRepository.findByEmail(registerRequest.email()).orElseGet(()->
+                userRepository.save(User.builder()
+                                .firstName(registerRequest.firstName())
+                                .lastName(registerRequest.lastName())
+                                .email(registerRequest.email())
+                                .password(registerRequest.password())
+                                .role(registerRequest.role())
+                        .build())
+        );
     }
 }
