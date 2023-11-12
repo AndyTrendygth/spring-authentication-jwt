@@ -21,12 +21,13 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
     @PostMapping("/login")
     public HttpEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest){
-        log.info("Incoming Login request");
+        log.debug("Incoming Login request");
         return ResponseEntity.ok(authenticationService.login(loginRequest));
     }
 
     @PostMapping("/signup")
     public HttpEntity<RegisterResponse> signup(@RequestBody RegisterRequest registerRequest){
+        log.debug("Incoming Signup request");
         return ResponseEntity.ok(authenticationService.signup(registerRequest));
     }
 

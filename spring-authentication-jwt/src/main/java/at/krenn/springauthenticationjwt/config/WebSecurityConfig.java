@@ -3,12 +3,15 @@ package at.krenn.springauthenticationjwt.config;
 import at.krenn.springauthenticationjwt.domain.Role;
 import at.krenn.springauthenticationjwt.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -33,7 +36,14 @@ public class WebSecurityConfig {
 
     private final JWTAuthorizationFilter jwtAuthorizationFilter;
     private final CustomUserDetailsService customUserDetailsService;
-    private final AuthenticationConfiguration authenticationConfiguration;
+
+    /**
+     * Spring filterChain Method that handles security for the entire application
+     * @param http HttpSecurity object
+     * @param introspector Introspector for MvcMatcher
+     * @return SecurityFilterChain instance
+     * @throws Exception on Error
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, HandlerMappingIntrospector introspector) throws Exception {
         MvcRequestMatcher.Builder mvcRequestMatcher = new MvcRequestMatcher.Builder(introspector);
@@ -41,36 +51,36 @@ public class WebSecurityConfig {
                .authorizeHttpRequests(request ->
                        request.requestMatchers(mvcRequestMatcher.pattern("/api/auth/**")).permitAll()
                                .requestMatchers(PathRequest.toH2Console()).permitAll()
-                               .requestMatchers(mvcRequestMatcher.pattern("/api/users/**")).hasAnyAuthority(Role.ADMIN.name())
+                               .requestMatchers(mvcRequestMatcher.pattern("/api/users/**")).hasRole(Role.ADMIN.name())
                                .anyRequest().authenticated())
                .headers(headers -> headers.frameOptions((frameOptions) -> frameOptions.disable()))
                .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-               .formLogin(FormLoginConfigurer::disable)
-               .authenticationProvider(authenticationProvider())
                .addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
-
-
-
        return http.build();
     }
 
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(customUserDetailsService);
-        authenticationProvider.setPasswordEncoder(passwordEncoder());
-        return authenticationProvider;
-    }
-
+    /**
+     * PasswordEncoder that encrypts the Database passwords
+     * @return a BCryptPasswordEncoder Instance
+     */
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
-    //TODO: Fix Authentication Manager
-    @Bean
-    public AuthenticationManager authenticationManager() throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
-    }
 
+    /**
+     * Instantiate the AuthenticationManager
+     * @param http HttpSecurity Object
+     * @return AuthenticationManager Instance
+     * @throws Exception on Error
+     */
+    @Bean
+     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+        AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
+        authenticationManagerBuilder
+                .userDetailsService(customUserDetailsService)
+                .passwordEncoder(passwordEncoder());
+        return authenticationManagerBuilder.build();
+    }
 
 }

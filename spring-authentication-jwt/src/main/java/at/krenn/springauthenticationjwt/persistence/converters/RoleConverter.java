@@ -4,6 +4,9 @@ import at.krenn.springauthenticationjwt.domain.Role;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
+/**
+ * Converter to handle database conversion for user roles
+ */
 @Converter(autoApply = true)
 public class RoleConverter implements AttributeConverter<Role, String> {
     @Override

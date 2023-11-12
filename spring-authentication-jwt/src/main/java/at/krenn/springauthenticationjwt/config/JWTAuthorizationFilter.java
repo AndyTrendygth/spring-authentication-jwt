@@ -9,8 +9,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -18,44 +20,33 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * JWTAuthorizationFilter that runs on secured api paths upon a request
+ */
 @Component
 @RequiredArgsConstructor
+@CommonsLog
 public class JWTAuthorizationFilter extends OncePerRequestFilter {
 
     private final JWTFactory jwtFactory;
     private final CustomUserDetailsService customUserDetailsService;
-    private final UserService userService;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        /*try {
-            String jwtToken = jwtFactory.resolveToken(request);
-            if (jwtToken==null){
-                return;
-            }
-            String email = jwtFactory.extractEmail(jwtToken);
-            if (!email.isEmpty() && SecurityContextHolder.getContext().getAuthentication()  ==null){
-                UserDetails user = customUserDetailsService.loadUserByUsername(email);
-               if(jwtFactory.isTokenValid(jwtToken, user)){
-                   Authentication authentication = new UsernamePasswordAuthenticationToken(user.getUsername(), user.getAuthorities());
-                   SecurityContextHolder.getContext().setAuthentication(authentication);
-               }
-            }
-        } catch (Exception e){
-
-        }
-        filterChain.doFilter(request,response);
-
-    */
-
         try {
+            log.debug("Running JWT Authorization Filter");
             String jwtToken = jwtFactory.resolveToken(request);
             if (jwtToken != null) {
                 String email = jwtFactory.extractEmail(jwtToken);
                 if (!email.isEmpty() && SecurityContextHolder.getContext().getAuthentication() == null) {
                     UserDetails user = customUserDetailsService.loadUserByUsername(email);
+                    log.debug("User successfully loaded");
                     if (jwtFactory.isTokenValid(jwtToken, user)) {
-                        Authentication authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                        log.debug("Valid JWT Token supplied");
+                        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+                        Authentication authentication = new UsernamePasswordAuthenticationToken(user.getUsername(), "", user.getAuthorities());
+                        securityContext.setAuthentication(authentication);
+                        SecurityContextHolder.setContext(securityContext);
                     }
                 }
             }

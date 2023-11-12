@@ -18,6 +18,9 @@ import java.util.Date;
 import java.util.Map;
 import java.util.function.Function;
 
+/**
+ * JwtFactory for creating, validating and handling JWT tokens
+ */
 @Component
 @RequiredArgsConstructor
 @CommonsLog
@@ -26,15 +29,13 @@ public class JWTFactory {
     private final String TOKEN_HEADER = "Authorization";
     private final String TOKEN_PREFIX = "Bearer ";
 
-    private final UserService userService;
-
     /**
      * Generate a JWT token with claims
      * @param user A user object
      * @return a signed JWT token
      */
     public String generateToken(User user){
-        log.info("Generating JWT token");
+        log.debug("Generating JWT token");
         return Jwts.builder().setSubject(user.getEmail())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis()+ 60000*60*24))
@@ -48,12 +49,12 @@ public class JWTFactory {
      * @return a signature Key
      */
     private Key getSignatureKey() {
-        byte[] key = Decoders.BASE64.decode("S6HIBYU1SDMBNP1H33HKY48BQVHGT3FI");
+        byte[] key = Decoders.BASE64.decode("S6HIBYU1SDMBNP1H33HKY48BQVHGT3FIASKJDFHTZ728472931QERFCVBNM");
         return Keys.hmacShaKeyFor(key);
     }
 
     /**
-     * Extract the email out of a JWT token
+     * Extract from JWT token
      * @param token JWT token
      * @return Email String
      */
@@ -64,7 +65,7 @@ public class JWTFactory {
     /**
      * get a specific claim from given token
      * @param token JWT token
-     * @param claimsResolvers
+     * @param claimsResolvers claim to extract
      * @return the requested claim
      * @param <T>
      */
@@ -82,6 +83,11 @@ public class JWTFactory {
         return Jwts.parserBuilder().setSigningKey(getSignatureKey()).build().parseClaimsJws(token).getBody();
     }
 
+    /**
+     * Extract and unformat JWT token from HTTP request
+     * @param request The HTTP request
+     * @return JWT token as a string
+     */
     public String resolveToken(HttpServletRequest request){
         String bearerToken = request.getHeader(TOKEN_HEADER);
         if (bearerToken != null && bearerToken.startsWith(TOKEN_PREFIX)) {
@@ -98,17 +104,18 @@ public class JWTFactory {
      */
     public boolean isTokenValid(String token, UserDetails user){
         final String email = extractEmail(token);
-        //String usermail = userService.getUserByEmail(email).get().getEmail();
         return (email.equals(user.getUsername()) && isTokenNotExpired(token));
     }
 
     /**
-     * Checks if the token is expired
+     * Checks if the token is not expired
      * @param token the JWT token
-     * @return true if the token is expired
+     * @return true if the token is not expired
      */
     private boolean isTokenNotExpired(String token) {
-        return extractClaim(token, Claims::getExpiration).before(new Date());
+        boolean result =  extractClaim(token, Claims::getExpiration).after(new Date());
+        log.debug("Token is not expired:" + result);
+        return result;
     }
 
     //TODO
@@ -121,6 +128,5 @@ public class JWTFactory {
                 .claim("role", user.getRole())
                 .signWith(getSignatureKey(), SignatureAlgorithm.HS256)
                 .compact();
-
     }
 }
