@@ -107,12 +107,17 @@ public class JWTFactory {
         return (email.equals(user.getUsername()) && isTokenNotExpired(token));
     }
 
+    public boolean checkValidEmail(String token, UserDetails userDetails){
+        final String email = extractEmail(token);
+        return email.equals(userDetails.getUsername());
+    }
+
     /**
      * Checks if the token is not expired
      * @param token the JWT token
      * @return true if the token is not expired
      */
-    private boolean isTokenNotExpired(String token) {
+    public boolean isTokenNotExpired(String token) {
         boolean result =  extractClaim(token, Claims::getExpiration).after(new Date());
         log.debug("Token is not expired:" + result);
         return result;

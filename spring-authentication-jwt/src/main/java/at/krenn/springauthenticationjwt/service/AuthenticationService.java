@@ -5,8 +5,10 @@ import at.krenn.springauthenticationjwt.domain.User;
 import at.krenn.springauthenticationjwt.foundation.JWTFactory;
 import at.krenn.springauthenticationjwt.persistence.UserRepository;
 import at.krenn.springauthenticationjwt.service.Requests.LoginRequest;
+import at.krenn.springauthenticationjwt.service.Requests.RefreshJwtTokenRequest;
 import at.krenn.springauthenticationjwt.service.Requests.RegisterRequest;
 import at.krenn.springauthenticationjwt.service.Responses.LoginResponse;
+import at.krenn.springauthenticationjwt.service.Responses.RefreshJwtTokenResponse;
 import at.krenn.springauthenticationjwt.service.Responses.RegisterResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.apachecommons.CommonsLog;
@@ -53,7 +55,7 @@ public class AuthenticationService {
 
         List<String> tokens = getJwtTokens(user);
 
-        return new LoginResponse(user.getFirstName(), user.getLastName(), user.getEmail(), tokens.getFirst(), tokens.getLast(), user.getRole());
+        return new LoginResponse(user.getFirstName(), user.getLastName(), user.getEmail(), tokens.get(0), tokens.get(1), user.getRole());
     }
 
     //TODO
@@ -102,5 +104,17 @@ public class AuthenticationService {
         log.debug("Generated jwt refresh token" + refreshToken);
 
         return tokenPair;
+    }
+
+    //TODO Allow only expired tokens?
+    public RefreshJwtTokenResponse refreshToken(RefreshJwtTokenRequest refreshJwtTokenRequest) {
+        String email = jwtFactory.extractEmail(refreshJwtTokenRequest.token());
+        UserDetails customUser = customUserDetailsService.loadUserByUsername(email);
+        User user = userService.getUserByEmail(email).get();
+        if(jwtFactory.checkValidEmail(refreshJwtTokenRequest.token(), customUser)&&jwtFactory.isTokenNotExpired(refreshJwtTokenRequest.token())){
+            List<String> tokens = getJwtTokens(user);
+            return new RefreshJwtTokenResponse(tokens.get(0), tokens.get(1));
+        }
+        throw new BadCredentialsException("Token is still valid, no need to refresh");
     }
 }
