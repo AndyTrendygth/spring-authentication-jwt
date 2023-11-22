@@ -106,12 +106,17 @@ public class AuthenticationService {
         return tokenPair;
     }
 
-    //TODO Allow only expired tokens?
+    /**
+     * Generate a refreshed token pair for an expired jwt token
+     * @param refreshJwtTokenRequest
+     * @return
+     */
     public RefreshJwtTokenResponse refreshToken(RefreshJwtTokenRequest refreshJwtTokenRequest) {
         String email = jwtFactory.extractEmail(refreshJwtTokenRequest.token());
         UserDetails customUser = customUserDetailsService.loadUserByUsername(email);
         User user = userService.getUserByEmail(email).get();
-        if(jwtFactory.checkValidEmail(refreshJwtTokenRequest.token(), customUser)&&jwtFactory.isTokenNotExpired(refreshJwtTokenRequest.token())){
+
+        if(jwtFactory.checkValidEmail(refreshJwtTokenRequest.token(), customUser) && !jwtFactory.isTokenNotExpired(refreshJwtTokenRequest.token()) && jwtFactory.isTokenNotExpired(refreshJwtTokenRequest.refreshToken())){
             List<String> tokens = getJwtTokens(user);
             return new RefreshJwtTokenResponse(tokens.get(0), tokens.get(1));
         }
