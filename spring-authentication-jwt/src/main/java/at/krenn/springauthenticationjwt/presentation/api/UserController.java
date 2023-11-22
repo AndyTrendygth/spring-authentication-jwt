@@ -6,6 +6,8 @@ import at.krenn.springauthenticationjwt.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,7 +20,7 @@ import java.util.List;
 public class UserController {
     public final UserService userService;
 
-    @RequestMapping("/{id}")
+    @GetMapping(path = {"/id", "/id/"})
     public HttpEntity<UserResponse> fetchSingleUser(@PathVariable Long id){
         return userService.getUser(id)
                 .map(UserResponse::new)
@@ -26,7 +28,8 @@ public class UserController {
                 .orElseGet(()-> ResponseEntity.notFound().build());
     }
 
-    @RequestMapping("/")
+    @GetMapping(path = {"","/"})
+    //@PreAuthorize("hasRole('ROLE_ADMIN')")
     public HttpEntity<List<UserResponse>> fetchAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers()
                 .stream()

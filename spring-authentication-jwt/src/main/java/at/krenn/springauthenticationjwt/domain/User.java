@@ -7,14 +7,22 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.AbstractPersistable;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
+import java.util.Collection;
+import java.util.List;
 
 @Entity
-@Builder
 @Data
+@Table(name = "u_user")
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "u_user")
-public class User extends AbstractPersistable<Long> {
+public class User extends AbstractPersistable<Long>  {
 
     private String firstName;
 
@@ -25,4 +33,5 @@ public class User extends AbstractPersistable<Long> {
     private String password;
 
     private Role role;
+
 }
