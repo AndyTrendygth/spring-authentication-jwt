@@ -51,6 +51,7 @@ public class WebSecurityConfig {
                .authorizeHttpRequests(request ->
                        request.requestMatchers(mvcRequestMatcher.pattern("/api/auth/**")).permitAll()
                                .requestMatchers(PathRequest.toH2Console()).permitAll()
+                               .requestMatchers(mvcRequestMatcher.pattern("/v3/api-docs/**"), mvcRequestMatcher.pattern("/swagger-ui/**")).permitAll()
                                .requestMatchers(mvcRequestMatcher.pattern("/api/users/**")).hasRole(Role.ADMIN.name())
                                .anyRequest().authenticated())
                .headers(headers -> headers.frameOptions((frameOptions) -> frameOptions.disable()))
